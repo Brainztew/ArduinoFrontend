@@ -12,7 +12,9 @@ interface TempStamp {
 
 const Readings = () => {
     const [tempStamp, setTempStamp] = useState<TempStamp[]>([]);
+    const [liveTempStamp, setLiveTempStamp] = useState<TempStamp | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchReadings = async () => {
@@ -23,6 +25,9 @@ const Readings = () => {
                 }
                 const data = await response.json();
                 setTempStamp(data);
+                if (data.length > 0) {
+                    setSelectedDate(data[0].tempDate.split('T')[0]); // Set the initial selected date
+                }
             } catch (error) {
                 console.error('There was an error!', error);
                 setError('Fel vid hämtning av data!');
@@ -30,19 +35,55 @@ const Readings = () => {
         };
         fetchReadings();
     }, []);
+    
+    useEffect(() => {
+        const fetchLiveReading = async () => {
+            try {
+                const response = await fetch('http://192.168.0.215:3000/live');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                setLiveTempStamp(data);
+            } catch (error) {
+                console.error('There was an error!', error);
+                setError('Fel vid hämtning av data!');
+            }
+        };
+        fetchLiveReading();
+    }, []);
 
-    if(error) {
+    if (error) {
         return <p>ERROR: {error}</p>;
     }
 
-    const sortedTempStamp = [...tempStamp].sort((a, b) => new Date(a.tempDate).getTime() - new Date(b.tempDate).getTime());
+    // Group data by date
+    const groupedByDate = tempStamp.reduce((acc, curr) => {
+        const date = curr.tempDate.split('T')[0];
+        if (!acc[date]) {
+            acc[date] = [];
+        }
+        acc[date].push(curr);
+        return acc;
+    }, {} as Record<string, TempStamp[]>);
+
+    // Sort each group by time
+    Object.keys(groupedByDate).forEach(date => {
+        groupedByDate[date].sort((a, b) => new Date(a.tempDate).getTime() - new Date(b.tempDate).getTime());
+    });
+
+    const handleDateChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedDate(event.target.value);
+    };
+
+    const selectedData = selectedDate ? groupedByDate[selectedDate] : [];
 
     const tempChartData = {
-        labels: sortedTempStamp.map(tempStamp => tempStamp.tempDate),
+        labels: selectedData.map(tempStamp => new Date(tempStamp.tempDate).toLocaleTimeString()),
         datasets: [
             {
                 label: 'Temperatur',
-                data: sortedTempStamp.map(tempStamp => parseFloat(tempStamp.temp)),
+                data: selectedData.map(tempStamp => parseFloat(tempStamp.temp)),
                 borderColor: 'rgba(75, 192, 192, 1)',
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 fill: true,
@@ -51,30 +92,48 @@ const Readings = () => {
     };
 
     const humidityChartData = {
-        labels: sortedTempStamp.map(tempStamp => tempStamp.tempDate),
+        labels: selectedData.map(tempStamp => new Date(tempStamp.tempDate).toLocaleTimeString()),
         datasets: [
             {
                 label: 'Fuktighet',
-                data: sortedTempStamp.map(tempStamp => parseFloat(tempStamp.humidity)),
+                data: selectedData.map(tempStamp => parseFloat(tempStamp.humidity)),
                 borderColor: 'rgba(192, 75, 192, 1)',
                 backgroundColor: 'rgba(192, 75, 192, 0.2)',
                 fill: true,
             },
         ],
     };
-    
 
     return (
-        <>
-{/*         <ul>
-            {tempStamp.map((tempStamp, index) => (
-                <li key={index}>
-                    <p>{tempStamp.tempDate}: {tempStamp.temp}°C</p>
-                </li>
-            ))}
-        </ul> */}
-        <Line data={tempChartData} />
-        <Line data={humidityChartData} />
+        <>   
+            {liveTempStamp && (
+                <p>
+                    Luftfuktighet: 
+                    <span style={{ color: parseFloat(liveTempStamp.humidity) >= 20 && parseFloat(liveTempStamp.humidity) <= 70 ? 'green' : 'red'}}>
+                    &nbsp;{liveTempStamp.humidity}% </span>
+                    <br />
+                    temperatur:
+                    <span style={{ color: parseFloat(liveTempStamp.temp) >= 17 ?'green' : 'red'}}>
+                    &nbsp;{liveTempStamp.temp}°C
+                    </span></p>
+
+            )}
+            <div>
+                <label htmlFor="date-select">Välj datum:</label>
+                <select id="date-select" value={selectedDate || ''} onChange={handleDateChange}>
+                    {Object.keys(groupedByDate).map(date => (
+                        <option key={date} value={date}>{date}</option>
+                    ))}
+                </select>
+            </div>
+            {selectedDate && selectedData.length > 0 && (
+                <>
+                    <h2>Temperaturdiagram för {selectedDate}</h2>
+                    <Line data={tempChartData} />
+                    <h2>Fuktighetsdiagram för {selectedDate}</h2>
+                    <Line data={humidityChartData} />
+                </>
+            )}
         </>
     );
 };
