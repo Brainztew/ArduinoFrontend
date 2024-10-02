@@ -26,7 +26,7 @@ const Readings = () => {
                 const data = await response.json();
                 setTempStamp(data);
                 if (data.length > 0) {
-                    setSelectedDate(data[0].tempDate.split('T')[0]); // Set the initial selected date
+                    setSelectedDate(data[0].tempDate.split('T')[0]);
                 }
             } catch (error) {
                 console.error('There was an error!', error);
@@ -57,7 +57,6 @@ const Readings = () => {
         return <p>ERROR: {error}</p>;
     }
 
-    // Group data by date
     const groupedByDate = tempStamp.reduce((acc, curr) => {
         const date = curr.tempDate.split('T')[0];
         if (!acc[date]) {
@@ -67,7 +66,6 @@ const Readings = () => {
         return acc;
     }, {} as Record<string, TempStamp[]>);
 
-    // Sort each group by time
     Object.keys(groupedByDate).forEach(date => {
         groupedByDate[date].sort((a, b) => new Date(a.tempDate).getTime() - new Date(b.tempDate).getTime());
     });
@@ -112,7 +110,7 @@ const Readings = () => {
                     <span style={{ color: parseFloat(liveTempStamp.humidity) >= 20 && parseFloat(liveTempStamp.humidity) <= 70 ? 'green' : 'red'}}>
                     &nbsp;{liveTempStamp.humidity}% </span>
                     <br />
-                    temperatur:
+                    Temperatur:
                     <span style={{ color: parseFloat(liveTempStamp.temp) >= 17 ?'green' : 'red'}}>
                     &nbsp;{liveTempStamp.temp}°C
                     </span></p>
