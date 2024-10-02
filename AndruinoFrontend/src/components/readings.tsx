@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+const API_URL = import.meta.env.VITE_API_URL;
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -19,7 +20,7 @@ const Readings = () => {
     useEffect(() => {
         const fetchReadings = async () => {
             try {
-                const response = await fetch('http://192.168.0.215:3000/temp');
+                const response = await fetch(`${API_URL}/temp`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
@@ -39,7 +40,7 @@ const Readings = () => {
     useEffect(() => {
         const fetchLiveReading = async () => {
             try {
-                const response = await fetch('http://192.168.0.215:3000/live');
+                const response = await fetch(`${API_URL}/live`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
