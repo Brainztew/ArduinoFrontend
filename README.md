@@ -56,4 +56,5 @@ Kopplingsdäck<br>
 ## Länkar:
 Backend: https://github.com/Brainztew/ArduinoBackend <br>
 Frontend: https://github.com/Brainztew/ArduinoFrontend <br>
-Ardunino: https://github.com/Brainztew/arduinoMagic
+Ardunino: https://github.com/Brainztew/arduinoMagic <br>
+Deployad: https://octopus-app-vh94f.ondigitalocean.app
