@@ -24,7 +24,9 @@ server.port=3000
 ## I Backend kan du:
 1. Registrera live temp
 2. Registrera DataBas temp
-3. Skicka datum och tid
+3. Se alla insamlade värden i databasen
+4. Se senaste värdet inskickat (livetemp)
+5. Få datum och tid som sträng
 
 ## I Frontend kan du:
 1. Se senaste temp och fukt värden
